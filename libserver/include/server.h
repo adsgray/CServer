@@ -33,10 +33,12 @@ struct _server_t {
 	int numthreads;
 	int maxcon; /* max number of connections before refusal */
 	int uid; /* user to become after binding to port */
+	int listen_sk; /* socket listening on */
         handler_rec *handlers; /* array of child thread ids */
 	handler_t (*newhandler)(void); /* get a new handler[1] */
         void (*summary)(server_t, int); /* print stats summary */
 	int (*destroy)(void *); /* "destructor" */
+	void *(*start)(void *); 
         wait_queue_t wq;
 }; 
 
@@ -45,8 +47,8 @@ struct _server_t {
  * a valid handle_con method.
  */
 
-/* pass it a server_t */
-void *server(void *arg);
+
+server_t new_server(server_t);
 
 
 #endif

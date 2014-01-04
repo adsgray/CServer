@@ -83,7 +83,6 @@ static int default_add_con(wait_queue_t self, connection_t con)
 
 	q->push(q, con);
 	self->num++;
-	pthread_mutex_unlock(&self->m);
 
 	/* could maybe make this a _signal, then see [2] below */
 #ifdef USE_SIGNAL
@@ -91,6 +90,8 @@ static int default_add_con(wait_queue_t self, connection_t con)
 #else
 	pthread_cond_broadcast(&self->w);
 #endif
+
+	pthread_mutex_unlock(&self->m);
 
 	return 1;
 }
@@ -123,14 +124,14 @@ static void default_wait_on(wait_queue_t self, handler_t hd)
 		  con = q->pop(q);
 		  self->num--;
 
-		  pthread_mutex_unlock(&self->m);
 #ifdef USE_SIGNAL
+		  /* [2] then somehow have the thread in here _signal it again */
 		  pthread_cond_signal(&self->w);
 #endif
+		  pthread_mutex_unlock(&self->m);
 		  hd->con = con;
 		  hd->handle_con(hd);
 		  pthread_mutex_lock(&self->m);
 		}
-		/* [2] then somehow have the thread in here _signal it again */
 	}
 }

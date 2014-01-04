@@ -36,17 +36,34 @@ static void become_daemon(server_t);
 static void become_user(server_t);
 static void default_summary(server_t self, int fd);
 static int default_destroy_svr(void *);
+static void *default_start_server(void *arg);
+
+#define svr_size sizeof(struct _server_t)
+
+server_t new_server(server_t svr)
+{
+
+	if (!svr) svr = ag_malloc(svr_size);
+	svr->wq = new_wait_queue();
+	svr->destroy = default_destroy_svr;
+	svr->summary = default_summary;
+	svr->start = default_start_server;
+	svr->newhandler = NULL;
+	svr->pidfile = svr->logfile = svr->name = "";
+
+	return svr;
+}
 
 /* BTW, in case you're wondering, this returns void* so that
  * it can be used as a pthread... 
  */
-void *server(void *arg)
+static void *default_start_server(void *arg)
 {
-	server_t svr = arg;
+	server_t self = arg;
 	connection_t con;
-	int i, listen_sk;
+	int i;
 
-	if (!svr) return NULL;
+	if (!self) return NULL;
 
 	/* 
 	 * TODO.
@@ -57,24 +74,21 @@ void *server(void *arg)
 	 *
 	 * Maybe it should be moved to ag.c and left up to main.
 	 */
-	become_daemon(svr);
+	become_daemon(self);
 
-	if (!svr->wq) svr->wq = new_wait_queue();
-	if (!svr->summary) svr->summary = default_summary;
-	if (!svr->destroy) svr->destroy = default_destroy_svr;
 
 	/* configure the wait_queue's max size */
-	svr->wq->max = svr->maxcon;
+	self->wq->max = self->maxcon;
 
 	/* this is the connection handler: */
-	svr->handlers = ag_malloc(sizeof(handler_rec) * svr->numthreads);
+	self->handlers = ag_malloc(sizeof(handler_rec) * self->numthreads);
 
-	for (i = 0; i < svr->numthreads; i++) {
+	for (i = 0; i < self->numthreads; i++) {
 		handler_t hd;
-		hd = svr->newhandler();
-		hd->svr = svr;
-		svr->handlers[i].hd = hd;
-		(void) pthread_create(&svr->handlers[i].tid,  /* thread id */
+		hd = self->newhandler();
+		hd->svr = self;
+		self->handlers[i].hd = hd;
+		(void) pthread_create(&self->handlers[i].tid,  /* thread id */
 				      NULL,                   /* attributes */
 				      hd->start,              /* function to run */
 				      (void *)hd              /* arg to pass to function */
@@ -88,20 +102,21 @@ void *server(void *arg)
 	 * TODO
 	 * At this point we should also open up the logfile.
 	*/
-	listen_sk = setup_connection(svr);
+	self->listen_sk = setup_connection(self);
 
-	/* only change users if svr->uid is non-zero (non-root) */
-	if (svr->uid) become_user(svr);
+	/* only change users if self->uid is non-zero (non-root) */
+	if (self->uid) become_user(self);
 
 	for (;;) {
-		con = accept_connection(listen_sk);
-		if (!svr->wq->add_con(svr->wq, con)) con->destroy(con);
+		con = accept_connection(self->listen_sk);
+		if (!self->wq->add_con(self->wq, con)) con->destroy(con);
 	}
 }
 
 static int default_destroy_svr(void *arg)
 {
-	server_t svr = arg;
+	server_t self = arg;
+	int i;
 	/* 
 	 * TODO. Some done.
 	 * close files 
@@ -110,11 +125,24 @@ static int default_destroy_svr(void *arg)
 	 * remove pid file?
 	 */
 
-	if (svr->logfd > 0) (void) close(svr->logfd);
-	if (svr->stats) free(svr->stats);
-	svr->wq->destroy(svr->wq);
+	if (self->logfd > 0) (void) close(self->logfd);
+	if (self->stats) free(self->stats);
+	self->wq->destroy(self->wq);
+
 	/* loop and cancel all handler threads. connections may hang.. hmmm. */
-	return svr->uid; /* shut up warnings for now */
+	for (i = 0; i < self->numthreads; i++) {
+		if (self->handlers[i].hd->con)
+			self->handlers[i].hd->con->destroy(self->handlers[i].hd->con);
+		(void) pthread_cancel(self->handlers[i].tid);
+	}
+
+	(void) close(self->listen_sk);
+	
+	/* TODO: would be cool to iterate through all connections in 
+	 * connection queue and close them all.
+	 */
+
+	return 1;
 }
 
 static connection_t accept_connection(int lsock)
@@ -172,7 +200,8 @@ static int setup_connection(server_t svr)
 
 static void become_daemon(server_t svr)
 {
-	/* TODO: parent writes pidfile after forking, then exit()s 
+	/* TODO: double fork.
+	   parent writes pidfile after forking, then exit()s 
 	   would also be cool to write config to pidfile.
 	 */
 }

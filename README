@@ -1,25 +1,44 @@
-smtpsink  v0.1
-libserver v0.1
+smtpsink  v0.9.0
+libserver v0.9.0
 
 Copyright (c) 2000 Andrew Gray 
 <agray@alumni.uwaterloo.ca>
-See COPYING for details.
+See COPYING for details. 
+Short Answer: This is under the GPL.
 
-A method and aparatus for writing a mutlithreaded internet server.
-Also a method and aparatus for simulating a real live SMTP server.
+* A method and aparatus for writing a mutlithreaded internet server.
+
+* Also a method and aparatus for simulating a real live SMTP server.
+  (smtpsink)
+
+* Also included: gr (generic_resource), a method and aparatus for
+  tracking and releasing resources semi-automatically. This is part
+  of libserver.
+
+Compiles cleanly (modulo a couple of annoying warnings) on my box:
+Linux chalco 2.2.17pre20 #20 Sun Aug 27 01:35:48 EDT 2000 i586 unknown
+
+The latest version should be available at <http://www3.50megs.com/adsgray/>
 
 SMTP specific:
 Currently is hardcoded to handle 35 simultaneous connections to port
-25 and do nothing.  Framework is in place to add random 4xx/5xx error
-responses as well as random dropped connections, with statistics tracking
-each time this happens.
-
+2525 and do not much.  
 A "info" server is started on port 2552 which you can telnet to and type
-"info" into to get some stats about the SMTP server.
+"info" into to get some stats about the SMTP server. Could add a "kill"
+command that will kill the SMTP server. (Done, but not cleanly).
+You can use the "info server" to set the frequency of random SMTP errors.
 
-General framework:
-I'd like to write a http_server (and ftp_server, and ...) to go along
+HTTP:
+http_driver is a simple HTTP server which services static page
+requests only.
+
+Future:
+I'd like to write an http_server (and ftp_server, and ...) to go along
 with the existing smtp_server.
 
 Maybe a port-forwarding load balancer too... which is configurable with
 a web browser.
+
+Maybe ability to look at smtpsink info/stats with a webbrowser.
+
+grep the code for "TODO".

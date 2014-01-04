@@ -51,6 +51,7 @@ static void *default_start(void *arg)
 
 	self->hd_state = HD_STARTING;
 	
+	/* does not return */
 	wq->wait_on(wq, self);
 
 	return NULL; /* shut up warnings */

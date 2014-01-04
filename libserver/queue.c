@@ -13,12 +13,16 @@
 static int default_destroy_q(void *arg)
 {
 	queue_t self = arg;
-	/* we don't really know what is stored in us, so we
+	/* TODO:
+	   we don't really know what is stored in us, so we
 	   can't exactly walk along and free it. Hmmmm.
 	   Unless a destroy method is added to queue_connector_t.
+	   And the user can set it to point to the correct
+	   destroy method. Cool.
 	*/
 	free(self);
-	self = NULL;
+	self = NULL; /* dangerous? or protects callers from
+		        using free()d memory? hmmm. */
 	return 0;
 }
 

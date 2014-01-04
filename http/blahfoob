@@ -1,0 +1,13 @@
+POST /cgi-bin/guestbooks.pl HTTP/1.0
+Referer: http://localhost:8009/guestbook.html
+Connection: Keep-Alive
+User-Agent: Mozilla/4.51 [en] (X11; I; Linux 2.2.17pre20 i586)
+Host: localhost:8009
+Accept: image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, image/png, */*
+Accept-Encoding: gzip
+Accept-Language: en
+Accept-Charset: iso-8859-1,*,utf-8
+Content-type: application/x-www-form-urlencoded
+Content-length: 49
+
+act=r&name=adsf&email=adsf&URL=adsf&comments=adsf

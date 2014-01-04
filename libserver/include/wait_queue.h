@@ -29,7 +29,6 @@ struct _wait_queue_t {
 	int (*add_con)(wait_queue_t, connection_t);
 	void (*wait_on)(wait_queue_t, handler_t);
 	int (*destroy)(void *);
-	/*connection_t conslist;*/
 }; 
 
 wait_queue_t new_wait_queue();

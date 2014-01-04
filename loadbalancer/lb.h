@@ -6,6 +6,8 @@
  *
  */
 
+/* TODO: this whole thing is TODO */
+
 #include "wait_queue.h"
 #include "connection.h"
 #include "handler.h"

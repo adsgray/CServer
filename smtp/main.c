@@ -13,10 +13,10 @@ int main(int argc, char **argv)
 {
   struct _smtp_server_options svrop = {
     0, /* min_delay */
-    5, /* max_delay */
-    4, /* percent_4xx */
-    4, /* percent_5xx */
-    3 /* percent_dropped */
+    3, /* max_delay */
+    6, /* percent_4xx */
+    5, /* percent_5xx */
+    4 /* percent_dropped */
   };
 	printf("Hello World!\n");
 
